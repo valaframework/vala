@@ -14,7 +14,7 @@ class FileServices {
     const newpath = `.${path}${filename}.${ext}`;
     return new Promise(async (resolve: any, reject: any) => {
       Deno.writeFile(newpath, new Uint8Array(await file.arrayBuffer()))
-        .then((res) => resolve(res))
+        .then((res) => resolve(newpath))
         .catch((err) => reject(err));
     });
   }
