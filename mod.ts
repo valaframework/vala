@@ -15,7 +15,7 @@ import {
 } from "./decorators.ts";
 
 export {
-  ApplicationService as VALA,
+  ApplicationService as Vala,
   Context,
   Controller,
   Delete,

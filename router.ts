@@ -83,6 +83,7 @@ class Router {
     routeMiddlewares.push(await route.controller);
     const middlewares = this.middles.concat(routeMiddlewares).slice();
     const next = () => middlewares[++index](ctx, next);
+    
     return middlewares[index](ctx, next);
   }
 }

@@ -1,10 +1,15 @@
-import { RequestSemType, Route } from "./types.ts";
+import {
+  defaultOptionsServer,
+  RequestSemType,
+  Route,
+  ServerOptions,
+} from "./types.ts";
 import RequestSem from "./request.ts";
 import router from "./router.ts";
 
 class ValaFramework {
   private request: RequestSem = new RequestSem();
-  private pathStaticFiles: string = "";
+  private pathStaticFiles = "";
 
   controllers(controllers: Array<any>) {
     controllers.map((controllerClass: any) => {
@@ -20,11 +25,15 @@ class ValaFramework {
     services.map((service: any) => new service());
   }
 
+  events(events: Array<any>) {
+    events.map((event: any) => new event());
+  }
+
   use(middleware: Function) {
     router.addMiddleware(middleware);
   }
 
-  setStaticFolder(path: string) {
+  static(path: string) {
     this.pathStaticFiles = path;
   }
 
@@ -37,7 +46,8 @@ class ValaFramework {
       "Cannot " + requestEvent.request.method + " " + url.pathname,
       { status: 404, statusText: "404 not found" },
     );
-    await requestEvent.respondWith(notFoundResponse);
+
+    return await requestEvent.respondWith(notFoundResponse);
   }
 
   private handler(requestEvent: Deno.RequestEvent): Route | null {
@@ -47,61 +57,50 @@ class ValaFramework {
 
   parseDirStaticFolder() {
     const init = new RegExp("^/");
-    const end = new RegExp("/$");
     let dir: string = this.pathStaticFiles;
-
     if (!init.test(dir)) {
       dir = "/" + dir;
     }
 
-    if (!end.test(dir)) {
-      dir = dir + "/";
-    }
     return dir;
   }
 
-  private async recursiveDir(dir: string, pathname: string) {
-    return new Promise(async (resolve: any, reject: any) => {
-      for await (
-        const xfile of Deno.readDirSync("." + this.parseDirStaticFolder() + dir)
-      ) {
-        if ("/" + xfile.name === pathname && xfile.isFile == true) {
-          resolve(xfile.name);
-        }
-
-        if (xfile.isDirectory) {
-          resolve(
-            xfile.name + "/" +
-              await this.recursiveDir(dir + "/" + xfile.name, pathname),
-          );
+  async recursiveFolder(path: string) {
+    const files: string[] = [];
+    const getFiles = async (path: string) => {
+      for await (const dirEntry of Deno.readDir(path)) {
+        if (dirEntry.isDirectory) {
+          await getFiles(path + "/" + dirEntry.name);
+        } else if (dirEntry.isFile) {
+          files.push(path + "/" + dirEntry.name);
         }
       }
+    };
 
-      reject(null);
+    await getFiles(path);
+    return files;
+  }
+
+  private searchFile(files: string[], path: string) {
+    return new Promise((resolve) => {
+      const file = files.find((e) => {
+        const parse: string = "/" + e.split("/").pop();
+        if (parse === path) return e;
+      });
+
+      resolve(file == undefined ? null : file);
     });
   }
 
   private async searchFileStatics(requestEvent: Deno.RequestEvent) {
     const url: URL = new URL(requestEvent.request.url);
-    let file = null;
-    for await (
-      const xfile of Deno.readDirSync("." + this.parseDirStaticFolder())
-    ) {
-      if ("/" + xfile.name === url.pathname && xfile.isFile == true) {
-        file = xfile.name;
-        break;
-      }
+    const files = await this.recursiveFolder("." + this.parseDirStaticFolder());
+    const file = await this.searchFile(files, url.pathname);
 
-      if (xfile.isDirectory) {
-        file = xfile.name + "/" +
-          await this.recursiveDir(xfile.name, url.pathname);
-        break;
-      }
-    }
-
-    if (file) {
-      const dir = decodeURIComponent("." + this.parseDirStaticFolder() + file);
-      const xfile = await Deno.open(decodeURIComponent(dir), { read: true });
+    if (file != null) {
+      const xfile = await Deno.open(decodeURIComponent(<string> file), {
+        read: true,
+      });
       await requestEvent.respondWith(
         new Response(xfile.readable, { status: 200 }),
       );
@@ -114,7 +113,6 @@ class ValaFramework {
     const httpConn = Deno.serveHttp(conn);
     for await (const requestEvent of httpConn) {
       const hand: Route | null = this.handler(requestEvent);
-
       if (hand != null) {
         const context: RequestSemType = await this.request.main(
           requestEvent,
@@ -127,10 +125,18 @@ class ValaFramework {
     }
   }
 
-  async serve(port: number = 4242) {
-    const server = Deno.listen({ port: port || 4242 });
+  async serve(options: ServerOptions) {
+    const opts: ServerOptions = {
+      ...defaultOptionsServer,
+      ...options,
+    };
+
+    const server = Deno.listen(opts);
+    if (opts.running != undefined) {
+      opts.running(`Server running in port ${opts.port}`);
+    }
     for await (const conn of server) {
-      this.httpHandler(conn).catch(console.error);
+      await this.httpHandler(conn).catch((err: any) => console.log("->", err));
     }
   }
 }

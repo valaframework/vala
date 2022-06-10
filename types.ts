@@ -34,8 +34,8 @@ export type Context = {
   request: Request;
   response: {
     send: (data: Response) => Promise<any>;
-    json: (data: Record<any, any>, options: ResponseInit) => Promise<any>;
-    text: (data: string, options: ResponseInit) => Promise<any>;
+    json: (data: Record<any, any>, options?: ResponseInit) => Promise<any>;
+    text: (data: string, options?: ResponseInit) => Promise<any>;
   };
   params: RouteParam[];
   query: Record<any, any>;
@@ -53,4 +53,14 @@ export type RequestSemType = {
 export type RequestBody = {
   body: Record<any, any>;
   files: Record<any, File>;
+};
+
+export interface ServerOptions {
+  port: number;
+  hostname?: string;
+  running?: (resolve: string) => void;
+}
+
+export const defaultOptionsServer: ServerOptions = {
+  port: 4242,
 };

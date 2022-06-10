@@ -114,17 +114,17 @@ class RequestSem {
   private async json(
     requestEvent: Deno.RequestEvent,
     data: Record<any, any>,
-    options: ResponseInit,
+    options?: ResponseInit,
   ) {
     await requestEvent.respondWith(
       new Response(
         JSON.stringify(data, null, 2),
-        this.optionsRequest(options, requestEvent.request),
+        this.optionsRequest(requestEvent.request, options),
       ),
     );
   }
 
-  private optionsRequest(option: ResponseInit, req: Request): ResponseInit {
+  private optionsRequest(req: Request, option?: ResponseInit): ResponseInit {
     const opt: ResponseInit = {
       status: 200,
       statusText: "OK",
@@ -141,12 +141,12 @@ class RequestSem {
   private async text(
     requestEvent: Deno.RequestEvent,
     data: string,
-    options: ResponseInit,
+    options?: ResponseInit,
   ) {
     await requestEvent.respondWith(
       new Response(
         data || "",
-        this.optionsRequest(options, requestEvent.request),
+        this.optionsRequest(requestEvent.request,options),
       ),
     );
   }
@@ -167,26 +167,23 @@ class RequestSem {
       files: files,
       response: {
         send: async (data: Response) => await this.send(requestEvent, data),
-        json: async (data: Record<any, any>, options: ResponseInit) =>
+        json: async (data: Record<any, any>, options?: ResponseInit) =>
           await this.json(requestEvent, data, options),
-        text: async (data: string, options: ResponseInit) =>
+        text: async (data: string, options?: ResponseInit) =>
           await this.text(requestEvent, data, options),
       },
     };
     return req;
   }
 
-  async main(
-    requestEvent: Deno.RequestEvent,
-    hand: Route,
-  ): Promise<RequestSemType> {
+  async main(requestEvent: Deno.RequestEvent,hand: Route): Promise<RequestSemType> {
     const urlTemp: URL = new URL(requestEvent.request.url);
     const req: RequestSemType = {
       context: await this.context(requestEvent, hand),
       url: urlTemp,
     };
 
-    return req;
+    return await req;
   }
 }
 
