@@ -18,6 +18,7 @@ export type Route = {
   classController: string;
   controller: (ctx: Context) => Promise<any>;
   middleware?: Array<Promise<Function>>;
+  metadata: any
 };
 
 export type RouteOptions = {

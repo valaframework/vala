@@ -5,7 +5,7 @@ _Fast, simple, minimalist web framework for Deno._
 import { Application } from "https://deno.land/x/vala@LAST_VERSION/mod.ts";
 const app = new Application();
 app.controllers([MyController]);
-await app.serve({port: 8000})
+await app.serve({port: 4242})
 ```
 
 ### Features

@@ -14,10 +14,7 @@ class ValaFramework {
   controllers(controllers: Array<any>) {
     controllers.map((controllerClass: any) => {
       const ctrl = new controllerClass();
-      if (ctrl.getPathController) {
-        const { controller, path } = ctrl.getPathController();
-        router.setRouterController(controller, path);
-      }
+      router.setRouterController(ctrl.controller, ctrl.pathController);
     });
   }
 
