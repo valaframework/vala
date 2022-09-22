@@ -141,6 +141,20 @@ import { Vala } from "https://deno.land/x/vala@LAST_VERSION/mod.ts";
 const UUID = await Vala.security.uuid();
 ```
 
+Create JWT:
+```javascript
+import { Vala } from "https://deno.land/x/vala@LAST_VERSION/mod.ts";
+
+const hdr={alg:'HS256', typ: 'JWT'}, payload={exp: Date.now(), a: 'b', c: 'd', e: 100}, secret='KEY_SECRET';
+const token = await Vala.security.createJWT(hdr,payload,secret);
+```
+
+Verify JWT:
+```javascript
+import { Vala } from "https://deno.land/x/vala@LAST_VERSION/mod.ts";
+const verify = await Vala.security.verifyJWT(token, secret);
+```
+
 ## Events
 Vala allows to work with events, for this we can register an event class or we can also use the event decorator in our. controllers, we see some examples
 
