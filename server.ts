@@ -18,6 +18,13 @@ class ValaFramework {
     });
   }
 
+  bootstrap(controllers: Array<any>) {
+    controllers.map((controllerClass: any) => {
+      const ctrl = new controllerClass();
+      router.setRouterController(ctrl.controller, ctrl.pathController);
+    });
+  }
+
   services(services: Array<any>) {
     services.map((service: any) => new service());
   }

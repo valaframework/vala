@@ -81,7 +81,7 @@ import { Application } from "https://deno.land/x/vala@LAST_VERSION/mod.ts";
 import MyController from './MyController.ts'
 const app = new Application();
 // We register the controller
-app.controllers([MyController])
+app.bootstrap([MyController])
 
 await app.serve({port:4242})
 ```
